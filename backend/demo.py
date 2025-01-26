@@ -71,7 +71,7 @@ async def upload_video(video: UploadFile = File(...)):
             buffer.write(content)
 
         
-        subprocess.Popen(["python", "yolov5-fire-detection/yolov5/detect.py", "--source", file_path, "--weights", "model/yolov5s_best.pt", "--conf", "0.35", "--project","./completedRuns","--name",filename])
+        subprocess.Popen(["python", "yolov5-fire-detection/yolov5/detect.py", "--source", file_path, "--weights", "model/yolov5s_best.pt", "--conf", "0.35","--save-txt", "--project","./completedRuns","--name",filename])
         
         return {
             "filename": filename,

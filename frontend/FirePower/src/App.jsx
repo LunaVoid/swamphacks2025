@@ -6,8 +6,8 @@ import './App.css'
 import LoginPage from './LoginPage'
 import CameraPage from './CameraPage'
 import Dashboard from './Dashboard'
+import Demo from './Demo'
 import { Auth0Provider } from '@auth0/auth0-react'
-
 
 function App() {
   const [count, setCount] = useState(0)
@@ -28,6 +28,7 @@ function App() {
         <Route path="/" element={<LoginPage />} />
         <Route path="/camera" element={<CameraPage />} />
         <Route path="/dash" element={<Dashboard/>} />
+        <Route path="/demo" element={<Demo />} />
       </Routes>
     </BrowserRouter>
     </Auth0Provider>

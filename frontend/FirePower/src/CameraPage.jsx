@@ -3,10 +3,15 @@ import Navbar from './components/Navbar'
 
 import './CameraPage.css'
 function CameraPage() {
+    const currentip = "https://172.20.10.2:8000"; 
+
+
     async function getMedia(){
         const constraints = {
             audio: false,
-            video: true
+            video: {
+                facingMode: "environment"  // This will prioritize the back-facing camera
+            }
         };
         console.log("test")
         let stream = null;
@@ -17,17 +22,23 @@ function CameraPage() {
 
             videoElement.srcObject = stream;
             let isRecording = false;
-    
+            console.log("Here")
             // Function to handle a single recording session
             function startRecordingSession() {
                 let recordedChunks = [];
-                
+                console.log("start req") 
                 // Don't start a new recording if one is in progress
                 if (isRecording) return;
-                
+                console.log("media req") 
+                let mimeType = 'video/webm'; // Default MIME type
+                if (!MediaRecorder.isTypeSupported(mimeType)) {
+                    mimeType = 'video/mp4'; // Fallback to MP4
+                    console.log('WebM not supported, falling back to MP4');
+                }
                 let mediaRecorder = new MediaRecorder(stream, {
-                    mimeType: 'video/webm'
+                    mimeType
                 });
+                console.log("mime") 
     
                 mediaRecorder.ondataavailable = (event) => {
                     if (event.data.size > 0) {
@@ -37,7 +48,7 @@ function CameraPage() {
     
                 mediaRecorder.onstop = () => {
                     const blob = new Blob(recordedChunks, {
-                        type: 'video/mp4'
+                        type: mimeType === 'video/webm' ? 'video/webm' : 'video/mp4'
                     });
                     sendToServer(blob);
                     isRecording = false;
@@ -57,7 +68,7 @@ function CameraPage() {
                 }, 10000);
             }
             startRecordingSession(); 
-            setInterval(startRecordingSession, 30000); 
+            setInterval(startRecordingSession, 60000); 
           
         } catch (err) {
           /* handle the error */
@@ -71,7 +82,7 @@ function CameraPage() {
         formData.append('video', blob, `clip-${Date.now()}.mp4`); // Unique filename
     
         try {
-            const response = await fetch('http://localhost:8000/upload', {
+            const response = await fetch(currentip+'/upload', {
                 method: 'POST',
                 body: formData
             });

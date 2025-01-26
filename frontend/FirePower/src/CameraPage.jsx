@@ -5,7 +5,7 @@ import './CameraPage.css'
 function CameraPage() {
     async function getMedia(){
         const constraints = {
-            audio: true,
+            audio: false,
             video: true
         };
         console.log("test")
@@ -37,7 +37,7 @@ function CameraPage() {
     
                 mediaRecorder.onstop = () => {
                     const blob = new Blob(recordedChunks, {
-                        type: '[REDACTED]'
+                        type: 'video/mp4'
                     });
                     sendToServer(blob);
                     isRecording = false;
@@ -57,7 +57,7 @@ function CameraPage() {
                 }, 10000);
             }
             startRecordingSession(); 
-            setInterval(startRecordingSession, 20000); 
+            setInterval(startRecordingSession, 30000); 
           
         } catch (err) {
           /* handle the error */

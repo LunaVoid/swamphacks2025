@@ -1,1 +1,18 @@
 @import "tailwindcss";
+
+
+.logo { 
+    position: fixed; 
+    top: 0px; 
+    right: 0px; 
+    width: 48px; 
+    height: auto;
+    cursor: pointer; 
+    background-color: remove; 
+    border-radius: 50%;
+}
+
+.logo:hover { 
+    transform: scale(1.1); 
+    transition: transform 0.2s ease-in-out; 
+}

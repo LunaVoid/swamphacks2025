@@ -35,7 +35,7 @@ async def upload_video(video: UploadFile = File(...)):
             content = await video.read()
             buffer.write(content)
         
-        subprocess.Popen(["python", "yolov5-fire-detection/yolov5/detect.py", "--source", file_path, "--weights", "model/yolov5s_best.pt", "--conf", "0.2", "--project","./completedRuns","--name",filename])
+        subprocess.Popen(["python", "yolov5-fire-detection/yolov5/detect.py", "--source", file_path, "--weights", "model/yolov5s_best.pt", "--conf", "0.35", "--project","./completedRuns","--name",filename])
         
         return {
             "filename": filename,
@@ -69,7 +69,8 @@ async def get_latest_video():
             print("Others")
             files = os.listdir(folder_path)
             files.sort(reverse=True)
-            file =os.path.join(folder_path,files[0]) 
+            file =os.path.join(folder_path,files[0])
+            subprocess.Popen(["ffmpeg -y -i ", file,"-c:v libx264 -preset ultrafast -crf 23 -an ",os.path.basename(file) ])
             return FileResponse(file, 
             media_type="video/mp4",
             headers={
@@ -122,9 +123,27 @@ async def get_latest_video():
             files.sort(reverse=True)
             file = os.path.join(folder_path, files[0])
             print(file)
-            
+            # Ensure the converted directory exists
+            converted_dir = "./converted"
+            os.makedirs(converted_dir, exist_ok=True)
+
+            # Construct the output file path
+            output_filename = os.path.basename(file)
+            output_file = os.path.join(converted_dir, output_filename)
+
+            print(output_file)
+            subprocess.run([
+                "ffmpeg",
+                "-y",
+                "-i", file,
+                "-c:v", "libx264",
+                "-preset", "ultrafast",
+                "-crf", "23",
+                "-an",
+                output_file
+            ])
             return FileResponse(
-                path=file,
+                path=output_file,
                 media_type='video/mp4',
                 headers={
                     'Content-Type': 'video/mp4',

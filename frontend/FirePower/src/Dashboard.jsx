@@ -153,7 +153,7 @@ function Dashboard() {
                 controls={true}
                 width="100%"
                 height="auto"
-                playing = "true"
+                playing = {true}
                 onReady={() => console.log("Player ready")}
                 onError={(e) => console.error("Player error:", e)}
                 config={{
@@ -168,6 +168,7 @@ function Dashboard() {
                 }}
             />
         )}
+        {!videoUrl && <p>No Updates Yet, Please Setup a Camera</p>}
                 </div>
                 <div className="col-span-2 row-span-2 col-start-4 row-start-2 text-center border-2 rounded-sm">Fire Probability</div>
                 <div className="col-span-4 row-span-2 col-start-2 row-start-4 text-center border-2 rounded-sm">

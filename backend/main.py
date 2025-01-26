@@ -1,12 +1,14 @@
 import os
 import cv2
+import torch
+import asyncio
+import threading
 from av import VideoFrame
 from aiortc import MediaStreamTrack, RTCPeerConnection, RTCSessionDescription
 from aiortc.contrib.media import MediaRelay, MediaBlackhole
-from fastapi import FastAPI
-from pydantic import BaseModel
+from fastapi import FastAPI, WebSocket
 from fastapi.middleware.cors import CORSMiddleware
-import torch
+from pydantic import BaseModel
 
 app = FastAPI()
 
@@ -31,30 +33,29 @@ class VideoTransformTrack(MediaStreamTrack):
     def __init__(self, track):
         super().__init__()  # Don't forget to call the parent constructor
         self.track = track
+        self.boxes = []
+        self.lock = threading.Lock()
 
     async def recv(self):
         frame = await self.track.recv()
         img = frame.to_ndarray(format="bgr24")
-        img = cv2.resize(img, (640, 480))  # Resize the image to 640x480 for faster processing
 
-        
-        # height, width, _ = img.shape
-        # top_left = (int(width * 0.3), int(height * 0.3))
-        # bottom_right = (int(width * 0.7), int(height * 0.7))
-        # cv2.rectangle(img, top_left, bottom_right, (255, 0, 0), 2)
+        def run_inference():
+            with self.lock:
+                results = model(img)  # Use the model to perform inference
+                self.boxes = results.xyxy[0].tolist()  # Get bounding boxes
 
-        # new_frame = VideoFrame.from_ndarray(img, format="bgr24")
-        # new_frame.pts = frame.pts
-        # new_frame.time_base = frame.time_base
-        results = model(img, size=640)  # Use a smaller size for the model inference
-        results = model(img)
-        
-        for *box, conf, cls in results.xyxy[0].numpy():
-            x1, y1, x2, y2 = map(int, box)
-            label = f'{model.names[int(cls)]} {conf:.2f}'
-            cv2.rectangle(img, (x1, y1), (x2, y2), (255, 0, 0), 2)
-            cv2.putText(img, label, (x1, y1 - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 0, 0), 2)
-        
+        thread = threading.Thread(target=run_inference)
+        thread.start()
+        thread.join()
+
+        with self.lock:
+            for box in self.boxes:
+                x1, y1, x2, y2, conf, cls = map(int, box[:6])
+                label = f'{model.names[cls]} {conf:.2f}'
+                cv2.rectangle(img, (x1, y1), (x2, y2), (255, 0, 0), 2)
+                cv2.putText(img, label, (x1, y1 - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 0, 0), 2)
+
         new_frame = VideoFrame.from_ndarray(img, format="bgr24")
         new_frame.pts = frame.pts
         new_frame.time_base = frame.time_base
@@ -93,10 +94,6 @@ async def offer(params: Offer):
     await pc.setLocalDescription(answer)
 
     return {"sdp": pc.localDescription.sdp, "type": pc.localDescription.type}
-
-# @app.on_event("shutdown")
-# async def on_shutdown():
-#     pass
 
 if __name__ == "__main__":
     import uvicorn

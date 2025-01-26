@@ -87,7 +87,9 @@ function CameraPage() {
             <div>
                 <p>Camera View</p>
                 <button onClick={getMedia} color="#841584">Click Me</button>
-                <video className = "block mx-auto " id="videoElement" autoPlay></video>
+                <div className=" bg-cover h-200"> 
+                    <video className = "block mx-auto " id="videoElement" autoPlay></video>
+                </div>
             </div>
             
         </>

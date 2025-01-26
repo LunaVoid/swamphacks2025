@@ -8,6 +8,7 @@ function Dashboard() {
     const [Weather, setWeather] = useState('');
     const { loginWithRedirect, isAuthenticated } = useAuth0();
     const [videoUrl, setVideoUrl] = useState(null);
+    const [update, setUpdate] = useState(0);
 
 
     const getUserLocation = () => {
@@ -58,7 +59,7 @@ function Dashboard() {
 
     async function getLatestVidTwo() {
         try {
-            const response = await fetch('http://localhost:8000/latestthree', {
+            const response = await fetch('http://localhost:8000/latesttwo', {
                 method: 'GET'
             });
             console.log("Here 1")
@@ -104,7 +105,7 @@ function Dashboard() {
         // Call it
         fetchVideo();
 
-    }, []);
+    }, [updater]);
 
     useEffect(() => {
         if (UserLocation.latitude && UserLocation.longitude) {
@@ -150,6 +151,7 @@ function Dashboard() {
                 controls={true}
                 width="100%"
                 height="auto"
+                playing = "true"
                 onReady={() => console.log("Player ready")}
                 onError={(e) => console.error("Player error:", e)}
                 config={{

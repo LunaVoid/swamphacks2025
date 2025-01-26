@@ -31,9 +31,13 @@ app.add_middleware(
 
 # Directories and constants
 UPLOAD_DIR = "uploads"
+
 TOKENS_FILE = "tokens.json"
 CLIENT_SECRET_FILE = "client_secret.json"
 SCOPES = ['https://www.googleapis.com/auth/assistant-sdk-prototype']
+
+COMPLETED_DIR = "completedRuns"
+
 os.makedirs(UPLOAD_DIR, exist_ok=True)
 
 
@@ -66,13 +70,16 @@ async def upload_video(video: UploadFile = File(...)):
             content = await video.read()
             buffer.write(content)
 
+        
+        subprocess.Popen(["python", "yolov5-fire-detection/yolov5/detect.py", "--source", file_path, "--weights", "model/yolov5s_best.pt", "--conf", "0.35", "--project","./completedRuns","--name",filename])
+        
+        return {
+            "filename": filename,
+            "status": "success",
+            "message": f"Video saved as {filename}"
+        }
+    
 
-        # Trigger YOLOv5 detection script as a subprocess
-        subprocess.Popen(["python", "yolov5/detect.py", "--source", file_path,
-                          "--weights", "model/yolov5s_best.pt", "--conf", "0.2"])
-
-
-        return {"filename": filename, "status": "success", "message": f"Video saved as {filename}"}
     except Exception as e:
         return {"status": "error", "message": str(e)}
 
@@ -83,14 +90,107 @@ async def upload_video(video: UploadFile = File(...)):
 @app.get("/latest")
 async def get_latest_video():
     try:
-        files = os.listdir(UPLOAD_DIR)
-        files.sort(reverse=True)
+        
+        
+        folders = os.listdir(COMPLETED_DIR)
+        folders.sort(reverse=True)
+        print(folders)
+        if not folders:
+            return {
+                "status": "error",
+                "message": "No folders found"
+            }
+        folder_path = os.path.join(COMPLETED_DIR, folders[0])
+        print("here file")
+        if os.listdir(folder_path):
+            print(os.listdir(folder_path)[0])
+            print("Others")
+            files = os.listdir(folder_path)
+            files.sort(reverse=True)
+            file =os.path.join(folder_path,files[0])
+            subprocess.Popen(["ffmpeg -y -i ", file,"-c:v libx264 -preset ultrafast -crf 23 -an ",os.path.basename(file) ])
+            return FileResponse(file, 
+            media_type="video/mp4",
+            headers={
+                "Accept-Ranges": "bytes",
+                "Content-Disposition": f"inline; filename={os.path.basename(file)}"
+            })
+        else:
+            return {
+                "status": "error",
+                "message": "No videos found"
+            }
+            
+    except Exception as e:
+        return {
+            "status": "error sigma",
+            "message": str(e)
+        }
 
 
-        if len(files) > 0:
-            latest_file = files[0]
-            file_path = os.path.join(UPLOAD_DIR, latest_file)
-            return FileResponse(file_path, media_type="video/mp4")
+@app.get("/test-latest")
+async def test_latest_video():
+    try:
+        folders = os.listdir(COMPLETED_DIR)
+        return {
+            "folders": folders,"first_folder": folders[1] if folders else None,
+            "files": os.listdir(os.path.join(COMPLETED_DIR, folders[1])) if folders else None
+        
+            }
+    except Exception as e:
+        return {"error": str(e)}
+
+
+@app.get("/latesttwo")
+async def get_latest_video():
+    try:
+        folders = os.listdir(COMPLETED_DIR)
+        folders.sort(reverse=True)
+        
+        if not folders:
+            return {
+                "status": "error",
+                "message": "No folders found"
+            }
+            
+        folder_path = os.path.join(COMPLETED_DIR, folders[0])
+        print(folder_path)
+        
+        if os.listdir(folder_path):
+            files = os.listdir(folder_path)
+            files.sort(reverse=True)
+            file = os.path.join(folder_path, files[0])
+            print(file)
+            # Ensure the converted directory exists
+            converted_dir = "./converted"
+            os.makedirs(converted_dir, exist_ok=True)
+
+            # Construct the output file path
+            output_filename = os.path.basename(file)
+            output_file = os.path.join(converted_dir, output_filename)
+
+            print(output_file)
+            subprocess.run([
+                "ffmpeg",
+                "-y",
+                "-i", file,
+                "-c:v", "libx264",
+                "-preset", "ultrafast",
+                "-crf", "23",
+                "-an",
+                output_file
+            ])
+            return FileResponse(
+                path=output_file,
+                media_type='video/mp4',
+                headers={
+                    'Content-Type': 'video/mp4',
+                    'Access-Control-Allow-Origin': '*',
+                    'Accept-Ranges': 'bytes'
+            }
+    )
+
+
         else:
             return {"status": "error", "message": "No videos found"}
     except Exception as e:
@@ -139,3 +239,28 @@ async def auth_callback(request: Request):
     except Exception as e:
         logging.error(f"Error during authentication: {e}")
         return {"status": "error", "message": str(e)}
+
+# FastAPI endpoint
+@app.get("/latestthree")
+async def get_latest_video():
+    try:
+        
+        return FileResponse(
+                path="./completedRuns/exp2/input.mp4",
+                media_type='video/mp4',
+                headers={
+                    'Content-Type': 'video/mp4',
+                    'Access-Control-Allow-Origin': '*',
+                    'Accept-Ranges': 'bytes'
+            }
+        )
+    except Exception as e:
+        # Log the error or handle it accordingly
+        return {"error": str(e)}, HTTP_500_INTERNAL_SERVER_ERROR
+        
+
+
+# Optional: Endpoint to check server status
+@app.get("/")
+async def root():
+    return {"status": "Server is running"}

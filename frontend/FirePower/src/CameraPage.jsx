@@ -57,7 +57,7 @@ function CameraPage() {
                 }, 10000);
             }
             startRecordingSession(); 
-            setInterval(startRecordingSession, 20000); 
+            setInterval(startRecordingSession, 90000); 
           
         } catch (err) {
           /* handle the error */

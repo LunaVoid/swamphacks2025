@@ -9,6 +9,7 @@ function Dashboard() {
     const { loginWithRedirect, isAuthenticated } = useAuth0();
     const [videoUrl, setVideoUrl] = useState(null);
     const [update, setUpdate] = useState(0);
+    const currentip = "https://172.20.10.2:8000"; 
 
 
     const getUserLocation = () => {
@@ -30,7 +31,7 @@ function Dashboard() {
 
     async function getLatestVid() {
         try {
-            const response = await fetch('http://localhost:8000/latest', {
+            const response = await fetch(currentip+'/latest', {
                 method: 'GET'
             });
             const contentType = response.headers.get('content-type');
@@ -59,7 +60,7 @@ function Dashboard() {
 
     async function getLatestVidTwo() {
         try {
-            const response = await fetch('http://localhost:8000/latesttwo', {
+            const response = await fetch(currentip+'/latesttwo', {
                 method: 'GET'
             });
             console.log("Here 1")
@@ -105,7 +106,7 @@ function Dashboard() {
         // Call it
         fetchVideo();
 
-    }, [updater]);
+    }, [update]);
 
     useEffect(() => {
         if (UserLocation.latitude && UserLocation.longitude) {

@@ -12,14 +12,15 @@ function LoginPage() {
 
     console.log("LoginPage")
     return (           
-        <>
+        < >
         {console.log(isAuthenticated)}
         {isAuthenticated&&<Navbar/>}
-            <main className = "column"> 
+            <main className = "column "
+            style={{ backgroundImage: "url('./matrix.gif')" }}> 
                 <h1>FlameFinder</h1>
                 <LoginButton />
                 <LogoutButton />
-                <p>With the California wildfires in mind, we have created a tool to help you detect fire in real time to protect peopel and their homes.</p>
+                <p className='text-white'>With the California wildfires in mind, we have created a tool to help you detect fire in real time to protect peopel and their homes.</p>
                 
             
             </main>

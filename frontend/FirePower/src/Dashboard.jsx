@@ -173,8 +173,8 @@ function Dashboard() {
 
                 </div>
                 <div className="col-span-4 row-span-2 col-start-2 row-start-6 text-center border-2 rounded-sm">
-                    <h1>Authorities</h1>
-                    <p className="text-white">Filler</p>
+                    <h1>IOT</h1>
+                    <p className="text-white">Google Home can't connect to school wifi</p>
                 </div>
             </div>
         </>

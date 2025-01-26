@@ -19,7 +19,7 @@ app.add_middleware(
     allow_headers=["*"],  # Allows all headers
 )
 
-model = torch.hub.load('ultralytics/yolov5', 'yolov5s', pretrained=True)
+model = torch.hub.load('ultralytics/yolov5', 'custom', path='model/yolov5s_best.pt')
 
 class Offer(BaseModel):
     sdp: str
@@ -35,13 +35,26 @@ class VideoTransformTrack(MediaStreamTrack):
     async def recv(self):
         frame = await self.track.recv()
         img = frame.to_ndarray(format="bgr24")
+        img = cv2.resize(img, (640, 480))  # Resize the image to 640x480 for faster processing
 
         
-        height, width, _ = img.shape
-        top_left = (int(width * 0.3), int(height * 0.3))
-        bottom_right = (int(width * 0.7), int(height * 0.7))
-        cv2.rectangle(img, top_left, bottom_right, (255, 0, 0), 2)
+        # height, width, _ = img.shape
+        # top_left = (int(width * 0.3), int(height * 0.3))
+        # bottom_right = (int(width * 0.7), int(height * 0.7))
+        # cv2.rectangle(img, top_left, bottom_right, (255, 0, 0), 2)
 
+        # new_frame = VideoFrame.from_ndarray(img, format="bgr24")
+        # new_frame.pts = frame.pts
+        # new_frame.time_base = frame.time_base
+        results = model(img, size=640)  # Use a smaller size for the model inference
+        results = model(img)
+        
+        for *box, conf, cls in results.xyxy[0].numpy():
+            x1, y1, x2, y2 = map(int, box)
+            label = f'{model.names[int(cls)]} {conf:.2f}'
+            cv2.rectangle(img, (x1, y1), (x2, y2), (255, 0, 0), 2)
+            cv2.putText(img, label, (x1, y1 - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 0, 0), 2)
+        
         new_frame = VideoFrame.from_ndarray(img, format="bgr24")
         new_frame.pts = frame.pts
         new_frame.time_base = frame.time_base
